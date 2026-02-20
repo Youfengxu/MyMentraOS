@@ -27,10 +27,10 @@ function getDate(): string {
 function buildContent(mode: DashboardMode | string): string {
   if (mode === DashboardMode.EXPANDED) {
     // Expanded mode has more room — add extra detail.
-    return `${getTime()} · ${getDate()} | Hello from G1!`;
+    return `${getTime()} · ${getDate()} | Hello from G1! \n hello hello2 hello3 hello4`;
   }
   // Main mode — keep it short, it shares space with other dashboard cards.
-  return `${getTime()} · Hello G1`;
+  return `${getTime()} · Hello G1 Hello from G1! \n hello hello2 hello3 hello4\nhello5 hellot3r 4fdgf dfg dfg fdgfd gfd gfd gfd gd`;
 }
 
 // ---------------------------------------------------------------------------
@@ -60,11 +60,17 @@ class CustomDashboardApp extends AppServer {
     const state: SessionState = { tickerInterval: null };
 
     // ------------------------------------------------------------------
+    // Pre-populate content immediately so it is cached in the cloud
+    // before the user looks up.  The dashboard will show it as soon as
+    // the mode becomes "main" or "expanded", with no extra round-trip.
+    // ------------------------------------------------------------------
+    writeToDashboard(session, DashboardMode.MAIN);
+    writeToDashboard(session, DashboardMode.EXPANDED);
+
+    // ------------------------------------------------------------------
     // React to dashboard mode changes.
     // Fires when the user looks up (mode → "main" or "expanded") and
     // when they look back down (mode → "none").
-    // writeToMain() / writeToExpanded() submit content as a card inside
-    // the existing dashboard — no conflict with the system dashboard.
     // ------------------------------------------------------------------
     session.dashboard.content.onModeChange((mode) => {
       if (mode === "none") {
