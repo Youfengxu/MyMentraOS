@@ -27,10 +27,10 @@ function getDate(): string {
 function buildContent(mode: DashboardMode | string): string {
   if (mode === DashboardMode.EXPANDED) {
     // Expanded mode has more room — add extra detail.
-    return `${getTime()} · ${getDate()} | Your custom content here`;
+    return `${getTime()} · ${getDate()} | Hello from G1!`;
   }
   // Main mode — keep it short, it shares space with other dashboard cards.
-  return `${getTime()} · ${getDate()}`;
+  return `${getTime()} · Hello G1`;
 }
 
 // ---------------------------------------------------------------------------
@@ -54,11 +54,7 @@ class CustomDashboardApp extends AppServer {
     });
   }
 
-  protected async onSession(
-    session: AppSession,
-    sessionId: string,
-    userId: string
-  ): Promise<void> {
+  protected async onSession(session: AppSession, sessionId: string, userId: string): Promise<void> {
     console.log(`[custom-dashboard] Session started — user: ${userId}, session: ${sessionId}`);
 
     const state: SessionState = { tickerInterval: null };
@@ -87,11 +83,7 @@ class CustomDashboardApp extends AppServer {
     });
   }
 
-  protected async onStop(
-    _sessionId: string,
-    userId: string,
-    reason: string
-  ): Promise<void> {
+  protected async onStop(_sessionId: string, userId: string, reason: string): Promise<void> {
     console.log(`[custom-dashboard] Session stopped — user: ${userId}, reason: ${reason}`);
   }
 }
