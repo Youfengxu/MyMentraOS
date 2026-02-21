@@ -9,6 +9,53 @@ const API_KEY = process.env.API_KEY ?? "c4ae82f14390528161b4d36292f37afb654cb3b2
 const PORT = parseInt(process.env.PORT ?? "3001", 10);
 
 // ---------------------------------------------------------------------------
+// Display constants  (4 lines × 22 chars)
+// ---------------------------------------------------------------------------
+
+const LINE_WIDTH = 22;
+const SCROLL_INTERVAL_MS = 3000; // ms between each 2-line content scroll step
+
+// ---------------------------------------------------------------------------
+// Text helpers
+// ---------------------------------------------------------------------------
+
+function truncate(text: string | null | undefined): string {
+  return (text ?? "").slice(0, LINE_WIDTH);
+}
+
+// Word-wrap text into lines of at most LINE_WIDTH chars.
+// Long words with no spaces are broken into LINE_WIDTH chunks.
+function wrapLines(text: string): string[] {
+  if (!text) return [""];
+  const lines: string[] = [];
+  let current = "";
+
+  for (const word of text.split(" ")) {
+    // Break any word longer than LINE_WIDTH into chunks first.
+    const chunks: string[] = [];
+    let w = word;
+    while (w.length > LINE_WIDTH) {
+      chunks.push(w.slice(0, LINE_WIDTH));
+      w = w.slice(LINE_WIDTH);
+    }
+    if (w.length > 0) chunks.push(w);
+
+    for (const chunk of chunks) {
+      if (current === "") {
+        current = chunk;
+      } else if (current.length + 1 + chunk.length <= LINE_WIDTH) {
+        current += " " + chunk;
+      } else {
+        lines.push(current);
+        current = chunk;
+      }
+    }
+  }
+  if (current) lines.push(current);
+  return lines.length > 0 ? lines : [""];
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -24,17 +71,29 @@ function getDate(): string {
   });
 }
 
-function buildContent(mode: DashboardMode | string, lastNotification: PhoneNotification | null): string {
-  const app = lastNotification?.app ?? "";
-  const truncatedApp = app.length > 27 ? app.slice(0, 24) + "..." : app;
-  const notifLine = lastNotification
-    ? `${truncatedApp}: ${lastNotification.title} — ${lastNotification.content}`
-    : "No notifications";
+function buildContent(mode: DashboardMode | string, lastNotification: PhoneNotification | null, lineOffset: number): string {
+  if (!lastNotification) {
+    if (mode === DashboardMode.EXPANDED) {
+      return `${getTime()} - ${getDate()}\nNo notifications`;
+    }
+    return "No notifications";
+  }
+
+  const titleLine = truncate(lastNotification.title);
+
+  const contentLines = wrapLines(lastNotification.content);
+  const len  = contentLines.length;
+  const idx  = lineOffset % len;
+  const row1 = contentLines[idx] ?? "";
+  const row2 = len > 1 ? (contentLines[(idx + 1) % len] ?? "") : "";
+  const row3 = len > 2 ? (contentLines[(idx + 2) % len] ?? "") : "";
 
   if (mode === DashboardMode.EXPANDED) {
-    return `${getTime()} · ${getDate()}\n${notifLine}`;
+    // line 1: time/date  line 2: title  lines 3-4: content (scrolling)
+    return `${getTime()} - ${getDate()}\n${titleLine}\n${row1}\n${row2}`;
   }
-  return `${notifLine}`;
+  // MAIN: line 1: title  lines 2-4: content (scrolling)
+  return `${titleLine}\n${row1}\n${row2}\n${row3}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -44,6 +103,7 @@ function buildContent(mode: DashboardMode | string, lastNotification: PhoneNotif
 interface SessionState {
   tickerInterval: ReturnType<typeof setInterval> | null;
   lastNotification: PhoneNotification | null;
+  lineOffset: number; // which pair of content lines is currently shown
 }
 
 // ---------------------------------------------------------------------------
@@ -62,15 +122,7 @@ class CustomDashboardApp extends AppServer {
   protected async onSession(session: AppSession, sessionId: string, userId: string): Promise<void> {
     console.log(`[custom-dashboard] Session started — user: ${userId}, session: ${sessionId}`);
 
-    const state: SessionState = { tickerInterval: null, lastNotification: null };
-
-    // ------------------------------------------------------------------
-    // Pre-populate content immediately so it is cached in the cloud
-    // before the user looks up.  The dashboard will show it as soon as
-    // the mode becomes "main" or "expanded", with no extra round-trip.
-    // ------------------------------------------------------------------
-    writeToDashboard(session, DashboardMode.MAIN, state);
-    writeToDashboard(session, DashboardMode.EXPANDED, state);
+    const state: SessionState = { tickerInterval: null, lastNotification: null, lineOffset: 0 };
 
     // ------------------------------------------------------------------
     // Track the most recent phone notification.
@@ -79,32 +131,25 @@ class CustomDashboardApp extends AppServer {
     console.log(`[custom-dashboard] Subscribed to phone notifications`);
 
     session.events.onPhoneNotifications((notification) => {
-      console.log(`[custom-dashboard] Notification received — app: ${notification.app}, title: ${notification.title}, content: ${notification.content}`);
+      console.log(`[custom-dashboard] Notification received: ${JSON.stringify(notification)}`);
       state.lastNotification = notification;
+      state.lineOffset = 0;
       writeToDashboard(session, DashboardMode.MAIN, state);
       writeToDashboard(session, DashboardMode.EXPANDED, state);
     });
 
     // ------------------------------------------------------------------
-    // React to dashboard mode changes.
-    // Fires when the user looks up (mode → "main" or "expanded") and
-    // when they look back down (mode → "none").
+    // Persistent ticker: advances content by 3 lines every SCROLL_INTERVAL_MS
+    // and pushes both views regardless of whether the user is looking.
     // ------------------------------------------------------------------
-    session.dashboard.content.onModeChange((mode) => {
-      if (mode === "none") {
-        stopTicker(state);
-        return;
-      }
+    writeToDashboard(session, DashboardMode.MAIN, state);
+    writeToDashboard(session, DashboardMode.EXPANDED, state);
 
-      // Push content immediately when the dashboard opens…
-      writeToDashboard(session, mode, state);
-
-      // …then refresh every second so the clock stays current.
-      stopTicker(state);
-      state.tickerInterval = setInterval(() => {
-        writeToDashboard(session, mode, state);
-      }, 1000);
-    });
+    state.tickerInterval = setInterval(() => {
+      state.lineOffset += 3;
+      writeToDashboard(session, DashboardMode.MAIN, state);
+      writeToDashboard(session, DashboardMode.EXPANDED, state);
+    }, SCROLL_INTERVAL_MS);
   }
 
   protected async onStop(_sessionId: string, userId: string, reason: string): Promise<void> {
@@ -117,19 +162,15 @@ class CustomDashboardApp extends AppServer {
 // ---------------------------------------------------------------------------
 
 function writeToDashboard(session: AppSession, mode: DashboardMode | string, state: SessionState): void {
-  const content = buildContent(mode, state.lastNotification);
-
-  if (mode === DashboardMode.EXPANDED) {
-    session.dashboard.content.writeToExpanded(content);
-  } else {
-    session.dashboard.content.writeToMain(content);
-  }
-}
-
-function stopTicker(state: SessionState): void {
-  if (state.tickerInterval !== null) {
-    clearInterval(state.tickerInterval);
-    state.tickerInterval = null;
+  try {
+    const content = buildContent(mode, state.lastNotification, state.lineOffset);
+    if (mode === DashboardMode.EXPANDED) {
+      session.dashboard.content.writeToExpanded(content);
+    } else {
+      session.dashboard.content.writeToMain(content);
+    }
+  } catch (err) {
+    console.error(`[custom-dashboard] writeToDashboard error (${mode}):`, err);
   }
 }
 
