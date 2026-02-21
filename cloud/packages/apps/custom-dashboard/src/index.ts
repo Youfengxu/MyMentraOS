@@ -1,4 +1,4 @@
-import { AppServer, AppSession, DashboardMode, PhoneNotification } from "@mentra/sdk";
+import { AppServer, AppSession, DashboardMode, PhoneNotification, StreamType } from "@mentra/sdk";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -25,14 +25,16 @@ function getDate(): string {
 }
 
 function buildContent(mode: DashboardMode | string, lastNotification: PhoneNotification | null): string {
+  const app = lastNotification?.app ?? "";
+  const truncatedApp = app.length > 27 ? app.slice(0, 24) + "..." : app;
   const notifLine = lastNotification
-    ? `${lastNotification.app}: ${lastNotification.title} — ${lastNotification.content}`
+    ? `${truncatedApp}: ${lastNotification.title} — ${lastNotification.content}`
     : "No notifications";
 
   if (mode === DashboardMode.EXPANDED) {
     return `${getTime()} · ${getDate()}\n${notifLine}`;
   }
-  return `${getTime()} · ${notifLine}`;
+  return `${notifLine}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -73,9 +75,12 @@ class CustomDashboardApp extends AppServer {
     // ------------------------------------------------------------------
     // Track the most recent phone notification.
     // ------------------------------------------------------------------
+    session.subscribe(StreamType.PHONE_NOTIFICATION);
+    console.log(`[custom-dashboard] Subscribed to phone notifications`);
+
     session.events.onPhoneNotifications((notification) => {
+      console.log(`[custom-dashboard] Notification received — app: ${notification.app}, title: ${notification.title}, content: ${notification.content}`);
       state.lastNotification = notification;
-      console.log(`[custom-dashboard] Notification from ${notification.app}: ${notification.title}`);
       writeToDashboard(session, DashboardMode.MAIN, state);
       writeToDashboard(session, DashboardMode.EXPANDED, state);
     });
