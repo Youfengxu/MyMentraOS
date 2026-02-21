@@ -72,6 +72,14 @@
         "typescript": "^5",
       },
     },
+    "packages/apps/custom-dashboard": {
+      "name": "@mentra/custom-dashboard",
+      "version": "0.1.0",
+      "dependencies": {
+        "@mentra/sdk": "workspace:*",
+        "dotenv": "^17.3.1",
+      },
+    },
     "packages/apps/example-webview": {
       "name": "@mentra/example-webview",
       "version": "0.1.0",
@@ -1032,6 +1040,8 @@
     "@mentra/cli": ["@mentra/cli@workspace:packages/cli"],
 
     "@mentra/cloud": ["@mentra/cloud@workspace:packages/cloud"],
+
+    "@mentra/custom-dashboard": ["@mentra/custom-dashboard@workspace:packages/apps/custom-dashboard"],
 
     "@mentra/debugger": ["@mentra/debugger@workspace:websites/debugger"],
 
@@ -4112,6 +4122,8 @@
     "@mentra/cloud/eslint": ["eslint@7.32.0", "", { "dependencies": { "@babel/code-frame": "7.12.11", "@eslint/eslintrc": "^0.4.3", "@humanwhocodes/config-array": "^0.5.0", "ajv": "^6.10.0", "chalk": "^4.0.0", "cross-spawn": "^7.0.2", "debug": "^4.0.1", "doctrine": "^3.0.0", "enquirer": "^2.3.5", "escape-string-regexp": "^4.0.0", "eslint-scope": "^5.1.1", "eslint-utils": "^2.1.0", "eslint-visitor-keys": "^2.0.0", "espree": "^7.3.1", "esquery": "^1.4.0", "esutils": "^2.0.2", "fast-deep-equal": "^3.1.3", "file-entry-cache": "^6.0.1", "functional-red-black-tree": "^1.0.1", "glob-parent": "^5.1.2", "globals": "^13.6.0", "ignore": "^4.0.6", "import-fresh": "^3.0.0", "imurmurhash": "^0.1.4", "is-glob": "^4.0.0", "js-yaml": "^3.13.1", "json-stable-stringify-without-jsonify": "^1.0.1", "levn": "^0.4.1", "lodash.merge": "^4.6.2", "minimatch": "^3.0.4", "natural-compare": "^1.4.0", "optionator": "^0.9.1", "progress": "^2.0.0", "regexpp": "^3.1.0", "semver": "^7.2.1", "strip-ansi": "^6.0.0", "strip-json-comments": "^3.1.0", "table": "^6.0.9", "text-table": "^0.2.0", "v8-compile-cache": "^2.0.3" }, "bin": { "eslint": "bin/eslint.js" } }, "sha512-VHZ8gX+EDfz+97jGcgyGCyRia/dPOd6Xh9yPv8Bl1+SoaIwD+a/vlrOmGRUyOYu7MwUhc7CxqeaDZU13S4+EpA=="],
 
     "@mentra/cloud/express": ["express@4.22.1", "", { "dependencies": { "accepts": "~1.3.8", "array-flatten": "1.1.1", "body-parser": "~1.20.3", "content-disposition": "~0.5.4", "content-type": "~1.0.4", "cookie": "~0.7.1", "cookie-signature": "~1.0.6", "debug": "2.6.9", "depd": "2.0.0", "encodeurl": "~2.0.0", "escape-html": "~1.0.3", "etag": "~1.8.1", "finalhandler": "~1.3.1", "fresh": "~0.5.2", "http-errors": "~2.0.0", "merge-descriptors": "1.0.3", "methods": "~1.1.2", "on-finished": "~2.4.1", "parseurl": "~1.3.3", "path-to-regexp": "~0.1.12", "proxy-addr": "~2.0.7", "qs": "~6.14.0", "range-parser": "~1.2.1", "safe-buffer": "5.2.1", "send": "~0.19.0", "serve-static": "~1.16.2", "setprototypeof": "1.2.0", "statuses": "~2.0.1", "type-is": "~1.6.18", "utils-merge": "1.0.1", "vary": "~1.1.2" } }, "sha512-F2X8g9P1X7uCPZMA3MVf9wcTqlyNp7IhH5qPCI0izhaOIYXaW9L535tGA3qmjRzpH+bZczqq7hVKxTR4NWnu+g=="],
+
+    "@mentra/custom-dashboard/dotenv": ["dotenv@17.3.1", "", {}, "sha512-IO8C/dzEb6O3F9/twg6ZLXz164a2fhTnEWb95H23Dm4OuN+92NmEAlTrupP9VW6Jm3sO26tQlqyvyi4CsnY9GA=="],
 
     "@mentra/debugger/@types/node": ["@types/node@22.19.3", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-1N9SBnWYOJTrNZCdh/yJE+t910Y128BoyY+zBLWhL3r0TYzlTmFdXrPwHL9DyFZmlEXNQQolTZh3KHV31QDhyA=="],
 

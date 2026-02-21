@@ -8,6 +8,7 @@
     "start": "bun src/index.ts"
   },
   "dependencies": {
-    "@mentra/sdk": "workspace:*"
+    "@mentra/sdk": "workspace:*",
+    "dotenv": "^17.3.1"
   }
 }

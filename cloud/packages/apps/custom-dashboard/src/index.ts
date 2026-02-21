@@ -1,12 +1,12 @@
-import { AppServer, AppSession, DashboardMode } from "@mentra/sdk";
+import { AppServer, AppSession, DashboardMode, PhoneNotification } from "@mentra/sdk";
 
 // ---------------------------------------------------------------------------
 // Configuration
 // ---------------------------------------------------------------------------
 
 const PACKAGE_NAME = process.env.PACKAGE_NAME ?? "org.dev.mydashboard";
-const API_KEY = process.env.API_KEY ?? "";
-const PORT = parseInt(process.env.PORT ?? "7020", 10);
+const API_KEY = process.env.API_KEY ?? "c4ae82f14390528161b4d36292f37afb654cb3b2f34435cf6e017659d79c20ac";
+const PORT = parseInt(process.env.PORT ?? "3001", 10);
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -24,13 +24,15 @@ function getDate(): string {
   });
 }
 
-function buildContent(mode: DashboardMode | string): string {
+function buildContent(mode: DashboardMode | string, lastNotification: PhoneNotification | null): string {
+  const notifLine = lastNotification
+    ? `${lastNotification.app}: ${lastNotification.title} — ${lastNotification.content}`
+    : "No notifications";
+
   if (mode === DashboardMode.EXPANDED) {
-    // Expanded mode has more room — add extra detail.
-    return `${getTime()} · ${getDate()} | Hello from G1! \n hello hello2 hello3 hello4`;
+    return `${getTime()} · ${getDate()}\n${notifLine}`;
   }
-  // Main mode — keep it short, it shares space with other dashboard cards.
-  return `${getTime()} · Hello G1 Hello from G1! \n hello hello2 hello3 hello4\nhello5 hellot3r 4fdgf dfg dfg fdgfd gfd gfd gfd gd`;
+  return `${getTime()} · ${notifLine}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -39,6 +41,7 @@ function buildContent(mode: DashboardMode | string): string {
 
 interface SessionState {
   tickerInterval: ReturnType<typeof setInterval> | null;
+  lastNotification: PhoneNotification | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -57,15 +60,25 @@ class CustomDashboardApp extends AppServer {
   protected async onSession(session: AppSession, sessionId: string, userId: string): Promise<void> {
     console.log(`[custom-dashboard] Session started — user: ${userId}, session: ${sessionId}`);
 
-    const state: SessionState = { tickerInterval: null };
+    const state: SessionState = { tickerInterval: null, lastNotification: null };
 
     // ------------------------------------------------------------------
     // Pre-populate content immediately so it is cached in the cloud
     // before the user looks up.  The dashboard will show it as soon as
     // the mode becomes "main" or "expanded", with no extra round-trip.
     // ------------------------------------------------------------------
-    writeToDashboard(session, DashboardMode.MAIN);
-    writeToDashboard(session, DashboardMode.EXPANDED);
+    writeToDashboard(session, DashboardMode.MAIN, state);
+    writeToDashboard(session, DashboardMode.EXPANDED, state);
+
+    // ------------------------------------------------------------------
+    // Track the most recent phone notification.
+    // ------------------------------------------------------------------
+    session.events.onPhoneNotifications((notification) => {
+      state.lastNotification = notification;
+      console.log(`[custom-dashboard] Notification from ${notification.app}: ${notification.title}`);
+      writeToDashboard(session, DashboardMode.MAIN, state);
+      writeToDashboard(session, DashboardMode.EXPANDED, state);
+    });
 
     // ------------------------------------------------------------------
     // React to dashboard mode changes.
@@ -79,12 +92,12 @@ class CustomDashboardApp extends AppServer {
       }
 
       // Push content immediately when the dashboard opens…
-      writeToDashboard(session, mode);
+      writeToDashboard(session, mode, state);
 
       // …then refresh every second so the clock stays current.
       stopTicker(state);
       state.tickerInterval = setInterval(() => {
-        writeToDashboard(session, mode);
+        writeToDashboard(session, mode, state);
       }, 1000);
     });
   }
@@ -98,8 +111,8 @@ class CustomDashboardApp extends AppServer {
 // Content helpers
 // ---------------------------------------------------------------------------
 
-function writeToDashboard(session: AppSession, mode: DashboardMode | string): void {
-  const content = buildContent(mode);
+function writeToDashboard(session: AppSession, mode: DashboardMode | string, state: SessionState): void {
+  const content = buildContent(mode, state.lastNotification);
 
   if (mode === DashboardMode.EXPANDED) {
     session.dashboard.content.writeToExpanded(content);
