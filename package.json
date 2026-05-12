@@ -5,7 +5,8 @@
   "scripts": {
     "start": "bun src/index.ts",
     "dev": "bun --hot src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "typecheck": "tsc --noEmit --target es2022 --module commonjs --moduleResolution node --esModuleInterop --skipLibCheck src/index.ts",
+    "test": "npm run typecheck"
   },
   "author": "",
   "license": "ISC",

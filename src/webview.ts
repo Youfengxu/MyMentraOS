@@ -1,31 +1,29 @@
 import { AuthenticatedRequest, AppServer } from '@mentra/sdk';
-import express from 'express';
 import path from 'path';
+import { DashboardHub } from './dashboard';
 
 /**
- * Sets up all Express routes and middleware for the server
- * @param server The server instance
+ * Sets up all Express routes and middleware for the custom dashboard webview.
  */
-export function setupExpressRoutes(server: AppServer): void {
-  // Get the Express app instance
+export function setupExpressRoutes(server: AppServer, dashboardHub: DashboardHub): void {
   const app = server.getExpressApp();
 
-  // Set up EJS as the view engine
   app.set('view engine', 'ejs');
   app.engine('ejs', require('ejs').__express);
   app.set('views', path.join(__dirname, 'views'));
 
-  // Register a route for handling webview requests
+  dashboardHub.setupRoutes(app);
+
+  app.get('/', (_req, res) => {
+    res.redirect('/webview');
+  });
+
   app.get('/webview', (req: AuthenticatedRequest, res) => {
-    if (req.authUserId) {
-      // Render the webview template
-      res.render('webview', {
-        userId: req.authUserId,
-      });
-    } else {
-      res.render('webview', {
-        userId: undefined,
-      });
-    }
+    res.render('webview', {
+      userId: req.authUserId,
+      assistantConfigured: Boolean(process.env.HOMELAB_ASSISTANT_URL),
+      rssFeedLabel: process.env.RSS_FEED_LABEL || 'RSS',
+      appTitle: process.env.DASHBOARD_TITLE || 'Mentra Command Dashboard',
+    });
   });
 }

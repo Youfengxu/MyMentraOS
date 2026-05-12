@@ -1,9 +1,9 @@
 {
-  "description": "A extended example app that shows how to use MentraOS.",
+  "description": "Custom Mentra OS dashboard with upcoming events, recent notifications, RSS feed, and a voice-activated homelab AI assistant.",
   "permissions": [
     {
       "type": "MICROPHONE",
-      "description": "To show transcriptions"
+      "description": "To listen for wake phrases and route final transcriptions to the homelab assistant."
     }
   ],
   "settings": [
@@ -16,11 +16,27 @@
   ],
   "tools": [
     {
-      "id": "my_tool_name",
-      "description": "This is a tool that does something.",
+      "id": "ask_homelab_assistant",
+      "description": "Send a spoken or tool-triggered prompt to the user's self-hosted homelab AI assistant.",
       "activationPhrases": [
-        "my tool name",
-        "use my tool"
+        "ask assistant",
+        "ask homelab",
+        "ask my assistant",
+        "talk to assistant"
+      ],
+      "parameters": {
+        "prompt": {
+          "type": "string",
+          "description": "The question or command to send to the homelab assistant."
+        }
+      }
+    },
+    {
+      "id": "refresh_dashboard",
+      "description": "Ask the web dashboard to refresh its visible data sources.",
+      "activationPhrases": [
+        "refresh dashboard",
+        "reload dashboard"
       ],
       "parameters": { }
     }

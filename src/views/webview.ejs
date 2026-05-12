@@ -1,23 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Design philosophy: Cybernetic Swiss Modernism. This template uses disciplined typography, asymmetric information lanes, dark technical surfaces, and restrained assistant-state motion. -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MentraOS Example App</title>
+    <title><%= appTitle %></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/css/style.css">
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>MentraOS Example App</h1>
-        </header>
-        <div class="instructions">
-            <% if (userId) { %>
-                <p>Logged in as: <span class="user-id"><%= userId %></span></p>
-            <% } else { %>
-                <p>Not logged in</p>
-            <% } %>
-        </div>
-    </div>
+<body data-assistant-configured="<%= assistantConfigured ? 'true' : 'false' %>">
+    <main class="dashboard-shell">
+        <section class="hero-panel" aria-labelledby="dashboard-title">
+            <div class="index-rail" aria-hidden="true">
+                <span>01</span><span>02</span><span>03</span><span>04</span>
+            </div>
+            <div class="hero-copy">
+                <p class="eyebrow">Mentra OS replacement surface</p>
+                <h1 id="dashboard-title"><%= appTitle %></h1>
+                <p class="lede">A glance-first cockpit for your day: upcoming events, live Mentra notifications, RSS intelligence, and a voice route into your self-hosted homelab assistant.</p>
+                <div class="identity-strip">
+                    <span>User</span>
+                    <strong><%= userId || 'Open from MentraOS to authenticate' %></strong>
+                </div>
+            </div>
+            <div class="system-card assistant-status-card">
+                <span class="section-number">A1</span>
+                <p class="eyebrow">Assistant state</p>
+                <h2 id="assistant-state">Idle</h2>
+                <div class="waveform" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+                <p id="assistant-hint"><%= assistantConfigured ? 'Say “Mentra” followed by a command, or use the web control below.' : 'Set HOMELAB_ASSISTANT_URL to connect your homelab assistant.' %></p>
+            </div>
+        </section>
+
+        <section class="command-band" aria-label="Assistant command controls">
+            <div>
+                <p class="eyebrow">Voice activation</p>
+                <h2>Homelab AI command link</h2>
+            </div>
+            <form id="assistant-form" class="assistant-form">
+                <label class="sr-only" for="assistant-input">Assistant command</label>
+                <input id="assistant-input" name="prompt" autocomplete="off" placeholder="Ask your homelab assistant…" />
+                <button type="submit">Send</button>
+                <button type="button" id="voice-button" class="secondary">Listen</button>
+            </form>
+        </section>
+
+        <section class="dashboard-grid" aria-label="Dashboard data">
+            <article class="panel events-panel">
+                <header class="panel-header">
+                    <span class="section-number">01</span>
+                    <div>
+                        <p class="eyebrow">Calendar vector</p>
+                        <h2>Upcoming events</h2>
+                    </div>
+                </header>
+                <div id="events-list" class="stack-list loading">Loading events…</div>
+            </article>
+
+            <article class="panel notifications-panel">
+                <header class="panel-header">
+                    <span class="section-number">02</span>
+                    <div>
+                        <p class="eyebrow">Signal log</p>
+                        <h2>Recent notifications</h2>
+                    </div>
+                </header>
+                <div id="notifications-list" class="stack-list loading">Loading notifications…</div>
+            </article>
+
+            <article class="panel rss-panel">
+                <header class="panel-header">
+                    <span class="section-number">03</span>
+                    <div>
+                        <p class="eyebrow"><%= rssFeedLabel %></p>
+                        <h2>RSS feed</h2>
+                    </div>
+                </header>
+                <div id="rss-list" class="stack-list loading">Loading feed…</div>
+            </article>
+
+            <article class="panel transcript-panel">
+                <header class="panel-header">
+                    <span class="section-number">04</span>
+                    <div>
+                        <p class="eyebrow">Live input</p>
+                        <h2>Voice stream</h2>
+                    </div>
+                </header>
+                <div id="assistant-log" class="assistant-log"></div>
+                <div id="transcript-line" class="transcript-line">Waiting for Mentra transcriptions…</div>
+            </article>
+        </section>
+    </main>
+    <script src="/js/dashboard.js" defer></script>
 </body>
 </html>
